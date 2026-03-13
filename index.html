@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тригонометрія — Тренажер</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d3d35; --card:#0f4f42; --accent:#06d6a0; --accent2:#00b386;
+  --gold:#ffd166; --red:#ff6b6b; --white:#fff;
+  --border:rgba(6,214,160,0.22); --soft:rgba(255,255,255,0.06);
+  --text:rgba(255,255,255,0.92); --muted:rgba(255,255,255,0.45);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Nunito',sans-serif;
+  background:var(--bg);
+  background-image:
+    radial-gradient(circle at 10% 15%, rgba(6,214,160,0.1) 0%,transparent 50%),
+    radial-gradient(circle at 90% 85%, rgba(0,179,134,0.08) 0%,transparent 50%);
+  min-height:100vh;color:var(--text);padding:28px 14px 60px;
+}
+header{text-align:center;margin-bottom:32px;}
+header h1{font-family:'Unbounded',sans-serif;font-size:1.55rem;font-weight:900;color:#fff;margin-bottom:4px;}
+header h1 span{color:var(--accent);}
+header p{color:var(--muted);font-size:0.88rem;}
+
+.card{
+  max-width:580px;margin:0 auto;
+  background:linear-gradient(150deg,var(--card) 0%,var(--bg) 100%);
+  border:1.5px solid var(--border);border-radius:24px;
+  padding:30px 32px;box-shadow:0 8px 40px rgba(0,0,0,0.3);
+}
+
+/* score */
+.score-bar{display:flex;justify-content:space-between;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+.sc{text-align:center;}
+.sc .v{font-family:'Unbounded',sans-serif;font-size:1.5rem;font-weight:900;}
+.sc .l{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+.sc.ok .v{color:var(--accent);} .sc.err .v{color:var(--red);} .sc.tot .v{color:var(--gold);}
+
+.streak{display:none;background:linear-gradient(135deg,#ff6b35,#f72585);color:#fff;
+  font-size:0.76rem;font-weight:800;padding:4px 14px;border-radius:20px;
+  margin:0 auto 14px;text-align:center;width:fit-content;
+  animation:popIn .4s cubic-bezier(.175,.885,.32,1.275);}
+@keyframes popIn{from{transform:scale(0.5);opacity:0;}to{transform:scale(1);opacity:1;}}
+
+/* task */
+.task-lbl{font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:14px;}
+
+/* triangle canvas */
+.tri-wrap{
+  display:flex;justify-content:center;align-items:center;
+  background:rgba(6,214,160,0.04);border:1.5px solid var(--border);
+  border-radius:16px;padding:12px;margin-bottom:22px;
+}
+canvas{max-width:100%;}
+
+/* angle label */
+.angle-label{
+  text-align:center;font-size:1rem;font-weight:700;
+  color:var(--muted);margin-bottom:18px;
+}
+.angle-label strong{color:var(--accent);font-size:1.15rem;}
+
+/* inputs grid */
+.trig-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:18px;}
+.trig-row{
+  display:flex;align-items:center;justify-content:center;gap:14px;
+  background:var(--soft);border:1.5px solid var(--border);
+  border-radius:14px;padding:14px 16px;
+}
+.trig-name{
+  font-family:'Unbounded',sans-serif;font-size:0.85rem;font-weight:700;
+  color:var(--accent);min-width:68px;text-align:right;
+}
+.eq{color:var(--muted);font-size:1.1rem;font-weight:700;margin:0 4px;}
+
+/* fraction input */
+.fraction{display:flex;flex-direction:column;align-items:center;gap:2px;width:150px;}
+.frac-input{
+  width:150px;padding:7px 10px;
+  border-radius:8px;border:1.5px solid var(--border);
+  background:rgba(255,255,255,0.07);
+  color:var(--white);font-family:'Nunito',sans-serif;
+  font-size:1rem;font-weight:700;text-align:center;
+  outline:none;transition:border-color .2s;text-transform:uppercase;
+  letter-spacing:1px;
+}
+.frac-input:focus{border-color:var(--accent);}
+.frac-input{-webkit-spellcheck:false;}
+.frac-input::spelling-error{text-decoration:none;}
+.frac-input:-webkit-autofill,
+.frac-input:-webkit-autofill:hover,
+.frac-input:-webkit-autofill:focus{
+  -webkit-box-shadow:0 0 0px 1000px rgba(15,79,66,0.95) inset;
+  -webkit-text-fill-color:#fff;
+  border-color:var(--border);
+}
+.frac-input.correct{border-color:var(--accent);background:rgba(6,214,160,0.12);color:var(--accent);}
+.frac-input.wrong{border-color:var(--red);background:rgba(255,107,107,0.1);color:var(--red);}
+.frac-line{width:80%;height:2px;background:var(--muted);border-radius:2px;}
+.frac-hint{font-size:0.68rem;color:var(--muted);text-align:center;margin-top:2px;}
+
+/* buttons */
+.btn{width:100%;padding:13px;border-radius:14px;border:none;
+  font-family:'Nunito',sans-serif;font-size:0.95rem;font-weight:800;cursor:pointer;transition:all .18s;}
+.btn-check{background:var(--accent);color:#0a2e28;box-shadow:0 4px 16px rgba(6,214,160,0.3);}
+.btn-check:hover{background:var(--accent2);transform:translateY(-2px);}
+.btn-next{background:linear-gradient(135deg,var(--accent2),#007a5e);color:#fff;margin-top:10px;}
+.btn-next:hover{transform:translateY(-2px);}
+
+/* feedback */
+.feedback{margin-top:14px;display:none;animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.feedback.show{display:block;}
+.fb-badge{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;font-weight:700;font-size:0.9rem;margin-bottom:10px;}
+.fb-badge.ok{background:rgba(6,214,160,0.12);color:var(--accent);}
+.fb-badge.fail{background:rgba(255,107,107,0.1);color:var(--red);}
+
+/* hint table */
+.hint-box{background:rgba(255,179,0,0.06);border:1.5px dashed rgba(255,179,0,0.3);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+.hint-title{font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--gold);margin-bottom:10px;}
+.hint-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06);}
+.hint-row:last-child{border-bottom:none;}
+.hint-fn{font-family:'Unbounded',sans-serif;font-size:0.78rem;color:var(--accent);}
+.hint-val{font-size:0.92rem;font-weight:700;color:#fff;}
+
+@media(max-width:480px){
+  .card{padding:22px 16px;}
+  .trig-name{min-width:58px;font-size:0.78rem;}
+  header h1{font-size:1.2rem;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📐 <span>Тригонометрія</span></h1>
+  <p>Тренажер · 8 клас · sin, cos, tg</p>
+</header>
+
+<div class="card">
+  <div class="score-bar">
+    <div class="sc ok"><div class="v" id="scOk">0</div><div class="l">Правильно</div></div>
+    <div class="sc tot"><div class="v" id="scTot">0</div><div class="l">Усього</div></div>
+    <div class="sc err"><div class="v" id="scErr">0</div><div class="l">Помилки</div></div>
+  </div>
+  <div class="streak" id="streak"></div>
+
+  <div class="task-lbl">За малюнком запиши </div>
+
+  <div class="tri-wrap">
+    <canvas id="triCanvas" width="320" height="240"></canvas>
+  </div>
+
+  <div class="angle-label" id="angleLabel">Запиши для кута <strong>A</strong></div>
+
+  <div class="trig-grid">
+    <div class="trig-row">
+      <div class="trig-name" id="fnLabel">sin A =</div>
+      <div class="fraction">
+        <input class="frac-input" id="fnNum" placeholder="" maxlength="4" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" data-gramm="false">
+        <div class="frac-line"></div>
+        <input class="frac-input" id="fnDen" placeholder="" maxlength="4" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" data-gramm="false">
+        <div class="frac-hint" id="fnHint"></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn btn-check" id="checkBtn" onclick="checkAnswer()">Перевірити</button>
+
+  <div class="feedback" id="feedback">
+    <div class="fb-badge ok"  id="badgeOk"  style="display:none"><span>✅</span><span id="okText">Правильно!</span></div>
+    <div class="fb-badge fail" id="badgeFail" style="display:none"><span>❌</span><span>Є помилки! Дивись підказку:</span></div>
+    <div class="hint-box" id="hintBox" style="display:none">
+      <div class="hint-title">💡 Правильні відповіді</div>
+      <div id="hintRows"></div>
+    </div>
+    <button class="btn btn-next" onclick="nextQuestion()">Наступне →</button>
+  </div>
+</div>
+
+<script>
+// ── Набори трикутників ──────────────────────────────────────────────
+// Вершини: прямий кут завжди в C
+// Кути: A, B, C(=90°) — літери беремо з наборів
+// Сторони: a=BC (протилежна A), b=AC (протилежна B), c=AB (гіпотенуза)
+
+const LETTER_SETS = [
+  {A:'A', B:'B', C:'C'},
+  {A:'M', B:'N', C:'K'},
+  {A:'P', B:'Q', C:'R'},
+  {A:'D', B:'E', C:'F'},
+  {A:'X', B:'Y', C:'V'},
+  {A:'L', B:'T', C:'S'},
+  {A:'G', B:'H', C:'W'},
+];
+
+// Сторони: a=BC, b=AC, c=AB (гіпотенуза)
+// Позначення сторін — маленькі або великі — через пари вершин
+function sideName(v1, v2){ return v1+v2; }
+
+let state = {
+  letters: null,
+  targetAngle: '',
+  opp: '', adj: '', hyp: '',
+  fn: '',   // 'sin' | 'cos' | 'tg'
+  ok:0, err:0, tot:0, streak:0,
+  done: false,
+  flip: false
+};
+
+const OKS=['Правильно! 🎉','Чудово! 👏','Молодець! ⭐','Відмінно! 🚀','Так тримати! 💪'];
+
+function rnd(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+function newQuestion(){
+  state.done = false;
+  state.letters = rnd(LETTER_SETS);
+  state.targetAngle = Math.random()<0.5 ? 'A' : 'B';
+  state.flip = Math.random() < 0.5;
+
+  const {A,B,C} = state.letters;
+
+  // Сторона навпроти A = BC, навпроти B = AC, гіпотенуза = AB
+  if(state.targetAngle === 'A'){
+    state.opp = sideName(B,C);  // BC — протилежна A
+    state.adj = sideName(A,C);  // AC — прилегла A
+    state.hyp = sideName(A,B);  // AB — гіпотенуза
+  } else {
+    state.opp = sideName(A,C);  // AC — протилежна B
+    state.adj = sideName(B,C);  // BC — прилегла B
+    state.hyp = sideName(A,B);
+  }
+
+  // Малюємо
+  drawTriangle();
+
+  // Випадкова функція
+  state.fn = rnd(['sin','cos','tg']);
+
+  const ang = state.targetAngle === 'A' ? A : B;
+  document.getElementById('angleLabel').innerHTML = `Запиши для кута <strong>${ang}</strong>`;
+
+  const hints = { sin:'протилежний / гіпотенуза', cos:'прилеглий / гіпотенуза', tg:'протилежний / прилеглий' };
+  document.getElementById('fnLabel').textContent = `${state.fn} ${ang} =`;
+  document.getElementById('fnHint').textContent  = hints[state.fn];
+
+  ['fnNum','fnDen'].forEach(id=>{
+    const el=document.getElementById(id);
+    el.value=''; el.className='frac-input'; el.disabled=false;
+  });
+
+  document.getElementById('feedback').classList.remove('show');
+  document.getElementById('checkBtn').style.display='block';
+  document.getElementById('fnNum').focus();
+}
+
+function drawTriangle(){
+  const canvas = document.getElementById('triCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  const {A,B,C} = state.letters;
+  const flip = state.flip;
+
+  // Координати вершин прямокутного трикутника
+  // C = прямий кут (внизу), A = зліва внизу, B = вгорі
+  // Або перевернуто якщо flip
+  let pA, pB, pC;
+  const pad = 52;
+
+  if(!flip){
+    // A внизу зліва, C внизу справа (прямий), B вгорі справа
+    pA = {x: pad,       y: H-pad};
+    pC = {x: W-pad,     y: H-pad};
+    pB = {x: W-pad,     y: pad};
+  } else {
+    // A вгорі зліва, C внизу зліва (прямий), B внизу справа
+    pA = {x: pad,       y: pad};
+    pC = {x: pad,       y: H-pad};
+    pB = {x: W-pad,     y: H-pad};
+  }
+
+  // Тінь
+  ctx.shadowColor='rgba(6,214,160,0.2)';
+  ctx.shadowBlur=12;
+
+  // Трикутник
+  ctx.beginPath();
+  ctx.moveTo(pA.x,pA.y);
+  ctx.lineTo(pB.x,pB.y);
+  ctx.lineTo(pC.x,pC.y);
+  ctx.closePath();
+  ctx.strokeStyle='#06d6a0';
+  ctx.lineWidth=2.5;
+  ctx.stroke();
+  ctx.fillStyle='rgba(6,214,160,0.06)';
+  ctx.fill();
+  ctx.shadowBlur=0;
+
+  // Знак прямого кута в C
+  const sq=12;
+  if(!flip){
+    ctx.beginPath();
+    ctx.moveTo(pC.x-sq, pC.y);
+    ctx.lineTo(pC.x-sq, pC.y-sq);
+    ctx.lineTo(pC.x,    pC.y-sq);
+    ctx.strokeStyle='rgba(6,214,160,0.6)';
+    ctx.lineWidth=1.8;
+    ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(pC.x,    pC.y-sq);
+    ctx.lineTo(pC.x+sq, pC.y-sq);
+    ctx.lineTo(pC.x+sq, pC.y);
+    ctx.strokeStyle='rgba(6,214,160,0.6)';
+    ctx.lineWidth=1.8;
+    ctx.stroke();
+  }
+
+  // Дуга кута A
+  drawAngleArc(ctx, pA, pB, pC, 22, '#ffd166');
+  // Дуга кута B
+  drawAngleArc(ctx, pB, pA, pC, 22, 'rgba(6,214,160,0.5)');
+
+  // Підписи вершин
+  ctx.font='bold 16px Nunito,sans-serif';
+  const offset=18;
+  function labelPos(p, center){
+    const dx=p.x-center.x, dy=p.y-center.y;
+    const len=Math.sqrt(dx*dx+dy*dy)||1;
+    return {x: p.x+dx/len*offset, y: p.y+dy/len*offset};
+  }
+  const center={x:(pA.x+pB.x+pC.x)/3, y:(pA.y+pB.y+pC.y)/3};
+
+  const lA=labelPos(pA,center);
+  const lB=labelPos(pB,center);
+  const lC=labelPos(pC,center);
+
+  ctx.fillStyle='#ffd166';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(A, lA.x, lA.y);
+  ctx.fillText(B, lB.x, lB.y);
+
+  ctx.fillStyle='rgba(255,255,255,0.5)';
+  ctx.fillText(C, lC.x, lC.y);
+
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+}
+
+function drawAngleArc(ctx, vertex, p1, p2, r, color){
+  // Кут від vertex до p1 і p2
+  const a1 = Math.atan2(p1.y-vertex.y, p1.x-vertex.x);
+  const a2 = Math.atan2(p2.y-vertex.y, p2.x-vertex.x);
+  ctx.beginPath();
+  ctx.arc(vertex.x, vertex.y, r, Math.min(a1,a2), Math.max(a1,a2));
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+// ── Перевірка ────────────────────────────────────────────────────────
+function norm(s){ return s.trim().toUpperCase().replace(/\s/g,''); }
+// Порівняння сторін: KM == MK
+function sideEq(a, b){ return a===b || a===b[1]+b[0]; }
+
+function checkAnswer(){
+  if(state.done) return;
+  state.done = true;
+
+  const correct = {
+    sin: { num: norm(state.opp), den: norm(state.hyp) },
+    cos: { num: norm(state.adj), den: norm(state.hyp) },
+    tg:  { num: norm(state.opp), den: norm(state.adj) },
+  };
+
+  const numVal = norm(document.getElementById('fnNum').value);
+  const denVal = norm(document.getElementById('fnDen').value);
+  const c = correct[state.fn];
+  const numOk = sideEq(numVal, c.num);
+  const denOk = sideEq(denVal, c.den);
+  const allOk = numOk && denOk;
+
+  document.getElementById('fnNum').className = 'frac-input ' + (numOk?'correct':'wrong');
+  document.getElementById('fnDen').className = 'frac-input ' + (denOk?'correct':'wrong');
+  document.getElementById('fnNum').disabled = true;
+  document.getElementById('fnDen').disabled = true;
+
+  if(allOk){ state.ok++; state.streak++; } else { state.err++; state.streak=0; }
+  state.tot++;
+
+  document.getElementById('scOk').textContent  = state.ok;
+  document.getElementById('scErr').textContent = state.err;
+  document.getElementById('scTot').textContent = state.tot;
+
+  const sb = document.getElementById('streak');
+  if(allOk && state.streak>=3){ sb.textContent='🔥 '+state.streak+' поспіль!'; sb.style.display='block'; }
+  else sb.style.display='none';
+
+  document.getElementById('feedback').classList.add('show');
+  document.getElementById('badgeOk').style.display   = allOk ? 'flex' : 'none';
+  document.getElementById('badgeFail').style.display = allOk ? 'none' : 'flex';
+  document.getElementById('checkBtn').style.display  = 'none';
+
+  const {A,B} = state.letters;
+  const ang = state.targetAngle === 'A' ? A : B;
+
+  if(allOk){
+    document.getElementById('okText').textContent = OKS[Math.floor(Math.random()*OKS.length)];
+    document.getElementById('hintBox').style.display = 'none';
+  } else {
+    document.getElementById('hintBox').style.display = 'block';
+    document.getElementById('hintRows').innerHTML = `
+      <div class="hint-row">
+        <span class="hint-fn">${state.fn} ${ang}</span>
+        <span class="hint-val">${c.num} / ${c.den}</span>
+      </div>`;
+  }
+}
+
+function nextQuestion(){ newQuestion(); }
+
+// Start
+newQuestion();
+</script>
+</body>
+</html>
